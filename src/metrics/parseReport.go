@@ -5,7 +5,6 @@ import (
 	"os"
 	"prometheus-vuls-exporter/utils"
 	"strings"
-
 	"github.com/tidwall/gjson"
 )
 
@@ -72,10 +71,12 @@ func parseReport(file os.FileInfo) Report {
 		for _, sev := range cvssSeverities.Array() {
 			severitiesSlice = append(severitiesSlice, sev.String())
 		}
-
-		uniqueSeverities := removeDuplicateValues(severitiesSlice)
-		if len(uniqueSeverities) > 0 {
-			severity = strings.ToLower(uniqueSeverities[0])
+		// log.Printf("Report:\n")
+		// log.Printf("%+v\n\n", severitiesSlice)
+		// uniqueSeverities := removeDuplicateValues(severitiesSlice)
+		if len(severitiesSlice) > 0 {
+			str2 := strings.Join(severitiesSlice, "")
+			severity = strings.ToLower(str2)
 		} else {
 			severity = "UNKNOWN"
 		}
@@ -85,12 +86,12 @@ func parseReport(file os.FileInfo) Report {
 			packageName:  c.Get("affectedPackages.0.name").String(),
 			severity:     severity,
 			fixState:     c.Get("affectedPackages.0.fixState").String(),
+			fixedIn:      c.Get("affectedPackages.0.fixedIn").String(),
 			notFixedYet:  c.Get("affectedPackages.0.notFixedYet").Bool(),
-			title:        c.Get("cveContents.nvd.title").String(),
-			summary:      c.Get("cveContents.nvd.summary").String(),
-			published:    c.Get("cveContents.nvd.published").String(),
-			lastModified: c.Get("cveContents.nvd.lastModified").String(),
-			mitigation:   c.Get("cveContents.nvd.mitigation").String(),
+			title:        c.Get("cveContents.nvd.0.title").String(),
+			summary:      c.Get("cveContents.nvd.0.summary").String(),
+			published:    c.Get("cveContents.nvd.0.published").String(),
+			lastModified: c.Get("cveContents.nvd.0.lastModified").String(),
 		}
 		cves = append(cves, cve)
 	}

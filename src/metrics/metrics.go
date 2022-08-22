@@ -18,6 +18,7 @@ type CVEInfo struct {
 	severity       string
 	notFixedYet    bool
 	fixState       string
+	fixedIn        string
 	title          string
 	summary        string
 	referenceLinks []string
