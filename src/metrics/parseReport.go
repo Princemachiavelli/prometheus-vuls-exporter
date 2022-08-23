@@ -78,27 +78,23 @@ func parseReport(file os.FileInfo) Report {
 
 		if len(uniqueSeverities) > 0 {
 			severity = uniqueSeverities[len(uniqueSeverities)-1]
-		} else {
-			severity = "UNKNOWN"
 		}
 
-		if len(severity) == 0 {
-			severity = "UNKNOWN"
+		if severity != "" && severity != "unimportant" && severity != "not yet assigned" {
+			cve := CVEInfo{
+				id:           c.Get("cveID").String(),
+				packageName:  c.Get("affectedPackages.0.name").String(),
+				severity:     strings.ToLower(severity),
+				fixState:     c.Get("affectedPackages.0.fixState").String(),
+				fixedIn:      c.Get("affectedPackages.0.fixedIn").String(),
+				notFixedYet:  c.Get("affectedPackages.0.notFixedYet").Bool(),
+				title:        c.Get("cveContents.nvd.0.title").String(),
+				summary:      c.Get("cveContents.nvd.0.summary").String(),
+				published:    c.Get("cveContents.nvd.0.published").String(),
+				lastModified: c.Get("cveContents.nvd.0.lastModified").String(),
+			}
+			cves = append(cves, cve)
 		}
-
-		cve := CVEInfo{
-			id:           c.Get("cveID").String(),
-			packageName:  c.Get("affectedPackages.0.name").String(),
-			severity:     strings.ToLower(severity),
-			fixState:     c.Get("affectedPackages.0.fixState").String(),
-			fixedIn:      c.Get("affectedPackages.0.fixedIn").String(),
-			notFixedYet:  c.Get("affectedPackages.0.notFixedYet").Bool(),
-			title:        c.Get("cveContents.nvd.0.title").String(),
-			summary:      c.Get("cveContents.nvd.0.summary").String(),
-			published:    c.Get("cveContents.nvd.0.published").String(),
-			lastModified: c.Get("cveContents.nvd.0.lastModified").String(),
-		}
-		cves = append(cves, cve)
 	}
 
 	r.cves = cves
