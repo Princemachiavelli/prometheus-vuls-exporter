@@ -34,6 +34,7 @@ func removeDuplicateValues(stringSlice []string) []string {
 			results = append(results, entry)
 		}
 	}
+	// log.Printf("%+v\n\n", results)
 	return results
 }
 
@@ -73,18 +74,22 @@ func parseReport(file os.FileInfo) Report {
 		}
 		// log.Printf("Report:\n")
 		// log.Printf("%+v\n\n", severitiesSlice)
-		// uniqueSeverities := removeDuplicateValues(severitiesSlice)
-		if len(severitiesSlice) > 0 {
-			str2 := strings.Join(severitiesSlice, "")
-			severity = strings.ToLower(str2)
+		uniqueSeverities := removeDuplicateValues(severitiesSlice)
+
+		if len(uniqueSeverities) > 0 {
+			severity = uniqueSeverities[len(uniqueSeverities)-1]
 		} else {
+			severity = "UNKNOWN"
+		}
+
+		if len(severity) == 0 {
 			severity = "UNKNOWN"
 		}
 
 		cve := CVEInfo{
 			id:           c.Get("cveID").String(),
 			packageName:  c.Get("affectedPackages.0.name").String(),
-			severity:     severity,
+			severity:     strings.ToLower(severity),
 			fixState:     c.Get("affectedPackages.0.fixState").String(),
 			fixedIn:      c.Get("affectedPackages.0.fixedIn").String(),
 			notFixedYet:  c.Get("affectedPackages.0.notFixedYet").Bool(),
