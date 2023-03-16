@@ -25,6 +25,7 @@ type CVEInfo struct {
 	published      string
 	lastModified   string
 	mitigation     string
+	path	       string
 }
 
 type Report struct {

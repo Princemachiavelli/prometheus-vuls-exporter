@@ -20,7 +20,7 @@ func CreateMetrics(reportsDir string) {
 	})
 
 	promauto.NewGaugeFunc(prometheus.GaugeOpts{
-		Name: "server_count",
+		Name: "vuln_server_count",
 		Help: "Total count of servers reported",
 	}, func() float64 {
 		count := len(reports)
@@ -28,7 +28,7 @@ func CreateMetrics(reportsDir string) {
 	})
 
 	promauto.NewGaugeFunc(prometheus.GaugeOpts{
-		Name: "reported_at",
+		Name: "vuln_reported_at",
 		Help: "Timestamp of last report time, in ms since Unix",
 	}, func() float64 {
 		var timestamp = reportedAt.Unix()
@@ -53,7 +53,7 @@ func CreateMetrics(reportsDir string) {
 
 	metrics = append(metrics, Metric{
 		prom: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: "vulns",
+			Name: "vuln_cve",
 			Help: "Vulnerability information, value represents total amount of hits",
 		}, []string{
 			"cveID",
@@ -67,6 +67,7 @@ func CreateMetrics(reportsDir string) {
 			"published",
 			"lastModified",
 			"mitigation",
+			"path",
 		}),
 		record: func(metric Metric) {
 			metric.prom.(*prometheus.GaugeVec).Reset()
@@ -88,6 +89,7 @@ func CreateMetrics(reportsDir string) {
 						cve.published,
 						cve.lastModified,
 						cve.mitigation,
+						cve.path,
 					).Inc()
 				}
 			}
@@ -96,7 +98,7 @@ func CreateMetrics(reportsDir string) {
 
 	metrics = append(metrics, Metric{
 		prom: promauto.NewGaugeVec(prometheus.GaugeOpts{
-			Name: "servers",
+			Name: "vuln_servers",
 			Help: "Server information, value represents amount of vulnerabilitites",
 		}, []string{
 			"serverName",

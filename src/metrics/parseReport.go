@@ -3,6 +3,7 @@ package metrics
 import (
 	"fmt"
 	"os"
+	"log"
 	"prometheus-vuls-exporter/utils"
 	"strings"
 	"github.com/tidwall/gjson"
@@ -67,10 +68,20 @@ func parseReport(file os.FileInfo) Report {
 	for _, c := range getData("scannedCves").Map() {
 		var severity string
 		cvssSeverities := c.Get("cveContents.@values.@flatten.#.cvss2Severity")
+		cvssSeverities3 := c.Get("cveContents.@values.@flatten.#.cvss3Severity")
 
 		var severitiesSlice []string
 		for _, sev := range cvssSeverities.Array() {
-			severitiesSlice = append(severitiesSlice, sev.String())
+			sevStr := sev.String()
+			if sevStr != "" {
+				severitiesSlice = append(severitiesSlice, sev.String())
+			}
+		}
+		for _, sev := range cvssSeverities3.Array() {
+			sevStr := sev.String()
+			if sevStr != "" {
+				severitiesSlice = append(severitiesSlice, sev.String())
+			}
 		}
 		// log.Printf("Report:\n")
 		// log.Printf("%+v\n\n", severitiesSlice)
@@ -79,11 +90,21 @@ func parseReport(file os.FileInfo) Report {
 		if len(uniqueSeverities) > 0 {
 			severity = uniqueSeverities[len(uniqueSeverities)-1]
 		}
+		var packageName string
+		var path string
+		path = ""
+		path = c.Get("libraryFixedIns.0.path").String()
+		packageName = c.Get("affectedPackages.0.name").String()
+		if len(packageName) == 0 {
+			log.Printf("Replacing pkg name for CVE %s", c.Get("cveID").String())
+			packageName = c.Get("libraryFixedIns.0.key").String()
+			packageName += "/" + c.Get("libraryFixedIns.0.name").String()
+		}
 
 		if severity != "" && severity != "unimportant" && severity != "not yet assigned" {
 			cve := CVEInfo{
 				id:           c.Get("cveID").String(),
-				packageName:  c.Get("affectedPackages.0.name").String(),
+				packageName:  strings.ToLower(packageName),
 				severity:     strings.ToLower(severity),
 				fixState:     c.Get("affectedPackages.0.fixState").String(),
 				fixedIn:      c.Get("affectedPackages.0.fixedIn").String(),
@@ -92,8 +113,13 @@ func parseReport(file os.FileInfo) Report {
 				summary:      c.Get("cveContents.nvd.0.summary").String(),
 				published:    c.Get("cveContents.nvd.0.published").String(),
 				lastModified: c.Get("cveContents.nvd.0.lastModified").String(),
+				path:	      strings.ToLower(path),
 			}
 			cves = append(cves, cve)
+		} else {
+			log.Printf("Skipping CVE %s", c.Get("cveID").String())
+			log.Printf("Skipping CVE severity = %s", severity)
+			log.Printf("%+v\n\n", uniqueSeverities)
 		}
 	}
 
